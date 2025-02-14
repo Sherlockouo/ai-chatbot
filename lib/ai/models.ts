@@ -1,27 +1,33 @@
-import { openai } from '@ai-sdk/openai';
-import { fireworks } from '@ai-sdk/fireworks';
+import { openai } from "@ai-sdk/openai";
+import { fireworks } from "@ai-sdk/fireworks";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+
+const deepseek = createDeepSeek({
+  apiKey: process.env.DEEPSEEK_API_KEY ?? "",
+  baseURL: "https://api.lkeap.cloud.tencent.com/v1",
+});
+
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
-} from 'ai';
+} from "ai";
 
-export const DEFAULT_CHAT_MODEL: string = 'chat-model-small';
+export const DEFAULT_CHAT_MODEL: string = "chat-model-small";
 
 export const myProvider = customProvider({
   languageModels: {
-    'chat-model-small': openai('gpt-4o-mini'),
-    'chat-model-large': openai('gpt-4o'),
-    'chat-model-reasoning': wrapLanguageModel({
-      model: fireworks('accounts/fireworks/models/deepseek-r1'),
-      middleware: extractReasoningMiddleware({ tagName: 'think' }),
+    "chat-model-reasoning": wrapLanguageModel({
+      model: deepseek("deepseek-r1"),
+      middleware: extractReasoningMiddleware({ tagName: "think" }),
     }),
-    'title-model': openai('gpt-4-turbo'),
-    'artifact-model': openai('gpt-4o-mini'),
+    "deepseek-chat": deepseek("deepseek-v3"),
+    "title-model": deepseek("deepseek-v3"),
+    "block-model": deepseek("deepseek-v3"),
   },
   imageModels: {
-    'small-model': openai.image('dall-e-2'),
-    'large-model': openai.image('dall-e-3'),
+    "small-model": openai.image("dall-e-2"),
+    "large-model": openai.image("dall-e-3"),
   },
 });
 
@@ -33,18 +39,13 @@ interface ChatModel {
 
 export const chatModels: Array<ChatModel> = [
   {
-    id: 'chat-model-small',
-    name: 'Small model',
-    description: 'Small model for fast, lightweight tasks',
+    id: "deepseek-chat",
+    name: "Normal Chat",
+    description: "Handle daily routines",
   },
   {
-    id: 'chat-model-large',
-    name: 'Large model',
-    description: 'Large model for complex, multi-step tasks',
-  },
-  {
-    id: 'chat-model-reasoning',
-    name: 'Reasoning model',
-    description: 'Uses advanced reasoning',
+    id: "chat-model-reasoning",
+    name: "Resoning Model",
+    description: "Uses advanced reasoning",
   },
 ];
