@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import html2canvas from "html2canvas";
 import { Button } from "./ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "./ui/dialog";
-import { EyeIcon } from "./icons";
+import { ShareIcon } from "./icons";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -100,7 +100,7 @@ export default function MarkdownToImage({ markdown }: MarkdownToImageProps) {
           className="py-1 px-2 h-fit text-muted-foreground"
           variant="outline"
         >
-          <EyeIcon />
+          <ShareIcon />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[90vw] h-[90vh] flex flex-col no-scrollbar">

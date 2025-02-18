@@ -193,6 +193,50 @@ function PureMultimodalInput({
     [setAttachments],
   );
 
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      setUploadQueue(files.map((file) => file.name));
+
+      try {
+        const uploadPromises = files.map((file) => uploadFile(file));
+        const uploadedAttachments = await Promise.all(uploadPromises);
+        const successfullyUploadedAttachments = uploadedAttachments.filter(
+          (attachment) => attachment !== undefined,
+        );
+
+        setAttachments((current) => [
+          ...current,
+          ...successfullyUploadedAttachments,
+        ]);
+      } catch (error) {
+        console.error("上传失败", error);
+      } finally {
+        setUploadQueue([]);
+      }
+    },
+    [setAttachments],
+  );
+
+  const handlePaste = useCallback(
+    async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = event.clipboardData.items;
+      const files: File[] = [];
+      console.log("items: ", items);
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          file && files.push(file);
+        }
+      }
+
+      if (files.length > 0) {
+        event.preventDefault();
+        await handleFiles(files);
+      }
+    },
+    [handleFiles],
+  );
+
   return (
     <div className="relative w-full flex flex-col gap-4">
       {messages.length === 0 &&
@@ -232,6 +276,7 @@ function PureMultimodalInput({
 
       <Textarea
         ref={textareaRef}
+        onPaste={handlePaste}
         placeholder="Send a message..."
         value={input}
         onChange={handleInput}
