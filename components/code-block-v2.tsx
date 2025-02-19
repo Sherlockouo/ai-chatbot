@@ -24,6 +24,11 @@ import {
   oneDark,
   oneLight,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { CopyIcon } from "./icons";
+import { motion } from "framer-motion";
+import { useCopyToClipboard } from "usehooks-ts";
+import { useTheme } from "next-themes";
+import { toast } from "sonner";
 
 // 创建语言注册表
 const languageMap = {
@@ -69,16 +74,32 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const match = /language-(\w+)/.exec(className || "");
   const lang = match ? match[1].toLowerCase() : "";
-  const isDarkMode = true; // 替换为你的主题状态
+  const { theme } = useTheme();
+  const isDarkMode = theme === "dark"; // 替换为你的主题状态
+  const [_, copyToClipboard] = useCopyToClipboard();
 
+  inline = className === undefined || className?.includes("language-md");
+
+  // console.log("CodeBlockProps", node, inline, className, props);
   if (!inline) {
     return (
-      <div className="not-prose flex flex-col relative">
+      <div className="w-fit not-prose flex flex-col relative">
         {lang && (
-          <div className="absolute right-4 top-2 text-xs text-zinc-400 dark:text-zinc-500">
+          <div className="absolute left-2 top-0 text-md text-zinc-500 dark:text-zinc-500">
             {lang}
           </div>
         )}
+        <motion.div
+          whileTap={{ scale: 0.95, opacity: 1.5 }}
+          className="absolute right-1 top-2 text-md text-zinc-500 dark:text-zinc-100 cursor-pointer"
+          onClick={async () => {
+            await copyToClipboard(String(children).replace(/\n$/, ""));
+            toast.success("Content copied to clipboard!");
+          }}
+        >
+          <CopyIcon />
+        </motion.div>
+
         <SyntaxHighlighter
           language={lang in languageMap ? lang : "text"}
           style={isDarkMode ? oneDark : oneLight}
@@ -91,7 +112,7 @@ export function CodeBlock({
           codeTagProps={{
             className: "whitespace-pre-wrap break-words font-mono",
           }}
-          className={`w-full overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
+          className={`w-full  overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
           {...props}
         >
           {String(children).replace(/\n$/, "")}
