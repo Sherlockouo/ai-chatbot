@@ -83,7 +83,7 @@ export function CodeBlock({
   // console.log("CodeBlockProps", node, inline, className, props);
   if (!inline) {
     return (
-      <div className="w-fit not-prose flex flex-col relative">
+      <div className="max-w-[70vw]  w-full not-prose flex flex-col relative">
         {lang && (
           <div className="absolute left-2 top-0 text-md text-zinc-500 dark:text-zinc-500">
             {lang}
@@ -112,7 +112,7 @@ export function CodeBlock({
           codeTagProps={{
             className: "whitespace-pre-wrap break-words font-mono",
           }}
-          className={`w-full  overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
+          className={`w-full overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900`}
           {...props}
         >
           {String(children).replace(/\n$/, "")}
