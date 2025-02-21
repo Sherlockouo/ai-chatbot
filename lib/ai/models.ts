@@ -13,7 +13,7 @@ import {
   wrapLanguageModel,
 } from "ai";
 
-export const DEFAULT_CHAT_MODEL: string = "deepseek-chat";
+export const DEFAULT_CHAT_MODEL: string = "chat-model-large";
 
 export const myProvider = customProvider({
   languageModels: {
@@ -21,7 +21,7 @@ export const myProvider = customProvider({
       model: deepseek("deepseek-r1"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),
     }),
-    "deepseek-chat": deepseek("deepseek-v3"),
+    "chat-model-large": deepseek("deepseek-v3"),
     "title-model": deepseek("deepseek-v3"),
     "block-model": deepseek("deepseek-v3"),
   },
@@ -39,7 +39,7 @@ interface ChatModel {
 
 export const chatModels: Array<ChatModel> = [
   {
-    id: "deepseek-chat",
+    id: "chat-model-large",
     name: "Normal Chat",
     description: "Handle daily routines",
   },
