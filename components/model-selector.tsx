@@ -1,19 +1,21 @@
-'use client';
+"use client";
 
-import { startTransition, useMemo, useOptimistic, useState } from 'react';
+import { startTransition, useMemo, useOptimistic, useState } from "react";
 
-import { saveChatModelAsCookie } from '@/app/(chat)/actions';
-import { Button } from '@/components/ui/button';
+import { saveChatModelAsCookie } from "@/app/(chat)/actions";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { chatModels } from '@/lib/ai/models';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { ChatModel } from "@/lib/ai/models";
+import { cn, fetcher } from "@/lib/utils";
 
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
+import { CheckCircleFillIcon, ChevronDownIcon } from "./icons";
+import { Provider } from "@/lib/db/schema";
+import useSWR from "swr";
 
 export function ModelSelector({
   selectedModelId,
@@ -25,17 +27,48 @@ export function ModelSelector({
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
+  // TODO: chat models 通过 fetch api/providers 接口获取,需要用SWR，并把响应结果转换为 chatModels 数组, 默认模型为第一个
+  // 使用SWR获取providers数据
+  const { data: providers } = useSWR<Provider[]>("/api/providers", fetcher, {
+    fallbackData: [],
+  });
+
+  // 转换providers数据为chatModels格式
+  const dynamicChatModels = useMemo(() => {
+    if (!providers) return [];
+    return providers.flatMap((provider: Provider) =>
+      (provider.models || []).map((m) => {
+        const model = JSON.parse(String(m));
+        return {
+          id: `${provider.providerName}:${model.modelID}`,
+          name: model.nickname,
+          description: model.modelDescription || "",
+        };
+      }),
+    );
+  }, [providers]);
+
+  // 使用第一个模型作为默认值
+  const defaultModelId = dynamicChatModels[0]?.id || "";
+  const finalSelectedId = optimisticModelId || defaultModelId;
+
   const selectedChatModel = useMemo(
-    () => chatModels.find((chatModel) => chatModel.id === optimisticModelId),
-    [optimisticModelId],
+    () =>
+      dynamicChatModels.find(
+        (model: ChatModel) => model.id === finalSelectedId,
+      ),
+    [dynamicChatModels, finalSelectedId],
   );
+
+  // 处理加载状态
+  if (!providers) return <div>Loading models...</div>;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
         className={cn(
-          'w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
+          "w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
           className,
         )}
       >
@@ -45,7 +78,7 @@ export function ModelSelector({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[300px]">
-        {chatModels.map((chatModel) => {
+        {dynamicChatModels.map((chatModel) => {
           const { id } = chatModel;
 
           return (

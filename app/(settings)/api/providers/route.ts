@@ -1,6 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import {
-  getModelConfigsByUserId,
+  getProviderByUserId,
   createModelConfig,
   deleteModelConfigById,
   getModelConfigById,
@@ -17,9 +17,8 @@ export async function GET() {
   }
 
   try {
-    const configs = await getModelConfigsByUserId(session.user.id);
-    console.log("get providers", configs);
-    return NextResponse.json(configs);
+    const providers = await getProviderByUserId(session.user.id);
+    return NextResponse.json(providers);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch configs" },
@@ -77,6 +76,7 @@ export async function PATCH(req: Request) {
     // 只允许更新指定字段
     const validUpdates = {
       providerName: body.providerName,
+      providerType: body.providerType,
       apiKey: body.apiKey,
       baseUrl: body.baseUrl,
       models: body.models,
@@ -105,7 +105,7 @@ export async function DELETE(req: Request) {
   const id = searchParams.get("id");
 
   try {
-    const configs = await getModelConfigsByUserId(session.user.id);
+    const configs = await getProviderByUserId(session.user.id);
     if (!configs || configs[0].userId != session.user.id) {
       return new Response("Unauthorized", { status: 401 });
     }

@@ -16,8 +16,10 @@ import {
   message,
   vote,
   provider,
+  Provider,
 } from "./schema";
 import { ArtifactKind } from "@/components/artifact";
+import { Model } from "../ai/models";
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -353,7 +355,7 @@ export async function createModelConfig(config: {
   providerType: string;
   apiKey?: string;
   baseUrl: string;
-  models: string[];
+  models: Model[];
 }) {
   try {
     return await db.insert(provider).values(config).returning();
@@ -363,10 +365,15 @@ export async function createModelConfig(config: {
   }
 }
 
-export async function getModelConfigsByUserId(userId: string) {
+export async function getProviderByUserId(
+  userId: string,
+): Promise<Array<Provider>> {
   try {
-    console.log("userid", userId);
-    return await db.select().from(provider).where(eq(provider.userId, userId));
+    const res = await db
+      .select()
+      .from(provider)
+      .where(eq(provider.userId, userId));
+    return res;
   } catch (error) {
     console.error("Failed to get model configs by user id", error);
     throw error;
@@ -377,9 +384,10 @@ export async function updateModelConfigById(
   id: string,
   updates: {
     providerName: string;
+    providerType: string;
     apiKey?: string;
     baseUrl: string;
-    models?: string[];
+    models?: Model[];
   },
 ) {
   try {

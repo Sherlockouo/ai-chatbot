@@ -10,6 +10,7 @@ import {
   foreignKey,
   boolean,
 } from "drizzle-orm/pg-core";
+import { Model } from "../ai/models";
 
 export const user = pgTable("User", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -55,7 +56,7 @@ export const provider = pgTable("Provider", {
   apiKey: text("api_key").default(""),
   baseUrl: text("base_url").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
-  models: json("models").$type<string[]>(), // 存储该provider支持的模型列表
+  models: json("models").$type<Model[]>(), // 存储该provider支持的模型列表
 });
 
 export type Provider = InferSelectModel<typeof provider>;

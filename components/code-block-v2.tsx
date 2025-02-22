@@ -83,7 +83,7 @@ export function CodeBlock({
   // console.log("CodeBlockProps", node, inline, className, props);
   if (!inline) {
     return (
-      <div className="max-w-[70vw]  w-full not-prose flex flex-col relative">
+      <div className="w-full flex flex-col relative">
         {lang && (
           <div className="absolute left-2 top-0 text-md text-zinc-500 dark:text-zinc-500">
             {lang}

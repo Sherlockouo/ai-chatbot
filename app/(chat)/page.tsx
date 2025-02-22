@@ -28,7 +28,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full max-w-[svw]">
       <Chat
         key={id}
         id={id}

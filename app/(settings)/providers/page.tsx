@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import useSWR, { useSWRConfig } from "swr";
@@ -17,8 +18,9 @@ import { useState } from "react";
 import { type Provider } from "@/lib/db/schema";
 import { type ColumnDef } from "@tanstack/react-table";
 import { fetcher } from "@/lib/utils";
-import { EyeCloseIcon } from "@/components/icons";
+import { CopyIcon, EyeCloseIcon, EyeIcon } from "@/components/icons";
 import { SidebarToggle } from "@/components/sidebar-toggle";
+import { useCopyToClipboard } from "usehooks-ts";
 
 const animationVariants = {
   initial: { opacity: 0, y: 20 },
@@ -30,21 +32,47 @@ const ApiKeyCell = ({ apiKey }: { apiKey: string }) => {
   const [showApiKey, setShowApiKey] = useState(false);
   const maskedApiKey = apiKey ? "*".repeat(apiKey.length) : "";
 
+  const [_, copyToClipboard] = useCopyToClipboard();
   return (
-    <motion.div {...animationVariants} className="flex items-center gap-2">
-      <span className="font-mono">{showApiKey ? apiKey : maskedApiKey}</span>
-      {apiKey && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowApiKey(!showApiKey);
-          }}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          type="button"
-        >
-          {showApiKey ? <EyeCloseIcon /> : <EyeCloseIcon />}
-        </button>
-      )}
+    <motion.div
+      {...animationVariants}
+      className="flex items-center gap-2 max-w-[150px]"
+    >
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="ghost">查看API密钥</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogTitle></DialogTitle>
+          <motion.div
+            {...animationVariants}
+            className="flex items-center gap-4 p-4"
+          >
+            <div className="font-mono break-all max-w-[300px] bg-gray-200 rounded-md p-2">
+              {showApiKey ? apiKey : maskedApiKey}
+            </div>
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  await copyToClipboard(apiKey);
+                  toast.success("Content copied to clipboard!");
+                }}
+              >
+                <CopyIcon />
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowApiKey(!showApiKey)}
+                size="icon"
+              >
+                {showApiKey ? <EyeCloseIcon /> : <EyeIcon />}
+              </Button>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };
@@ -57,28 +85,6 @@ export default function ProvidersPage() {
     "/api/providers",
     fetcher,
   );
-  console.log("providers ", providers);
-
-  const handleTestConnection = async (configId: string) => {
-    try {
-      const response = await fetch(`/api/providers/test?id=${configId}`);
-      const result = await response.json();
-
-      if (result.valid) {
-        toast.success("Connection successful", {
-          description: `Found ${result.models.length} models`,
-        });
-      } else {
-        toast.error("Connection failed", {
-          description: result.error,
-        });
-      }
-    } catch (error) {
-      toast.error("Test failed", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  };
 
   const handleDelete = async (deleteId: string) => {
     const deletePromise = fetch(`/api/providers?id=${deleteId}`, {
@@ -86,10 +92,9 @@ export default function ProvidersPage() {
     });
 
     toast.promise(deletePromise, {
-      loading: "Deleting chat...",
+      loading: "Deleting provider...",
       success: () => {
-        mutate((history) => {});
-        return "Chat deleted successfully";
+        return "deleted successfully";
       },
       error: "Failed to delete chat",
     });
@@ -135,7 +140,7 @@ export default function ProvidersPage() {
       header: "Available Models",
       cell: ({ row }) => (
         <motion.div {...animationVariants}>
-          {(row.original.models as string[])?.join(", ") || "No models"}
+          {String(row.original.models)}
         </motion.div>
       ),
     },
@@ -155,13 +160,6 @@ export default function ProvidersPage() {
           </Button>
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => handleTestConnection(row.original.id)}
-          >
-            Test
-          </Button>
-          <Button
-            size="sm"
             variant="destructive"
             onClick={async () => {
               await handleDelete(row.original.id);
@@ -176,7 +174,7 @@ export default function ProvidersPage() {
   ];
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-2 space-y-6 w-full mx-2 flex flex-col">
       <div className="flex justify-between items-center">
         <SidebarToggle />
         <h1 className="text-2xl font-bold">Model Providers</h1>
@@ -191,6 +189,7 @@ export default function ProvidersPage() {
       </div>
 
       <motion.div
+        className="mx-auto max-w-screen"
         initial="initial"
         animate="animate"
         transition={{ staggerChildren: 0.05 }}
@@ -203,7 +202,7 @@ export default function ProvidersPage() {
       </motion.div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] md:max-w-[800px]">
           <motion.div
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
