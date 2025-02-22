@@ -1,19 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { fireworks } from "@ai-sdk/fireworks";
-import { createDeepSeek } from "@ai-sdk/deepseek";
-
-const deepseek = createDeepSeek({
-  apiKey: process.env.DEEPSEEK_API_KEY ?? "",
-  baseURL: "https://api.lkeap.cloud.tencent.com/v1",
-});
-
-import {
-  customProvider,
-  extractReasoningMiddleware,
-  wrapLanguageModel,
-} from "ai";
-
-export const DEFAULT_CHAT_MODEL: string = "chat-model-large";
+export const DEFAULT_CHAT_MODEL: string = "deepseek-r1";
 
 export interface ChatModel {
   id: string;
@@ -21,20 +6,6 @@ export interface ChatModel {
   description: string;
 }
 
-export const chatModels: Array<ChatModel> = [
-  {
-    id: "tencent-deepseek:deepseek-v3",
-    name: "Normal Chat",
-    description: "Handle daily routines",
-  },
-  {
-    id: "tencent-deepseek:deepseek-r1",
-    name: "Resoning Model",
-    description: "Uses advanced reasoning",
-  },
-];
-
-// 模型类
 export interface Model {
   nickname: string;
   modelID: string;
@@ -43,6 +14,7 @@ export interface Model {
   modelType: string;
   capabilities: Array<string>;
 }
+
 export const processModelData = (data: any[]): Model[] => {
   return data.map((item) => ({
     nickname: item.id,

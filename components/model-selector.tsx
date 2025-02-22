@@ -16,6 +16,7 @@ import { cn, fetcher } from "@/lib/utils";
 import { CheckCircleFillIcon, ChevronDownIcon } from "./icons";
 import { Provider } from "@/lib/db/schema";
 import useSWR from "swr";
+import { Skeleton } from "./ui/skeleton";
 
 export function ModelSelector({
   selectedModelId,
@@ -60,9 +61,6 @@ export function ModelSelector({
     [dynamicChatModels, finalSelectedId],
   );
 
-  // 处理加载状态
-  if (!providers) return <div>Loading models...</div>;
-
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -73,7 +71,9 @@ export function ModelSelector({
         )}
       >
         <Button variant="outline" className="md:px-2 md:h-[34px]">
-          {selectedChatModel?.name}
+          {selectedChatModel?.name || (
+            <Skeleton className="size-16 h-4 rounded-xs" />
+          )}
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
