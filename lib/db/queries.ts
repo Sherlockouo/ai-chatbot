@@ -20,6 +20,7 @@ import {
 } from "./schema";
 import { ArtifactKind } from "@/components/artifact";
 import { Model } from "../ai/models";
+import { decryptApiKey, encrypt } from "../utils";
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -358,7 +359,11 @@ export async function createModelConfig(config: {
   models: Model[];
 }) {
   try {
-    return await db.insert(provider).values(config).returning();
+    const encryptedConfig = {
+      ...config,
+      apiKey: config.apiKey ? encrypt(config.apiKey) : undefined
+    };
+    return await db.insert(provider).values(encryptedConfig).returning()
   } catch (error) {
     console.error("Failed to create model config", error);
     throw error;
@@ -373,6 +378,11 @@ export async function getProviderByUserId(
       .select()
       .from(provider)
       .where(eq(provider.userId, userId));
+
+    res.map((provider) => {
+      provider.apiKey ? provider.apiKey = decryptApiKey(provider.apiKey) : ""
+      return provider
+    })
     return res;
   } catch (error) {
     console.error("Failed to get model configs by user id", error);
@@ -391,6 +401,9 @@ export async function updateModelConfigById(
   },
 ) {
   try {
+    if (updates.apiKey) {
+      updates.apiKey = encrypt(updates.apiKey)
+    }
     return await db
       .update(provider)
       .set(updates)
