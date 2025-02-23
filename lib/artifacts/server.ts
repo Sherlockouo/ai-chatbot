@@ -3,7 +3,7 @@ import { imageDocumentHandler } from '@/artifacts/image/server';
 import { sheetDocumentHandler } from '@/artifacts/sheet/server';
 import { textDocumentHandler } from '@/artifacts/text/server';
 import { ArtifactKind } from '@/components/artifact';
-import { DataStreamWriter } from 'ai';
+import { DataStreamWriter, LanguageModel } from 'ai';
 import { Document } from '../db/schema';
 import { saveDocument } from '../db/queries';
 import { Session } from 'next-auth';
@@ -20,6 +20,7 @@ export interface CreateDocumentCallbackProps {
   id: string;
   title: string;
   dataStream: DataStreamWriter;
+  model: LanguageModel;
   session: Session;
 }
 
@@ -27,6 +28,7 @@ export interface UpdateDocumentCallbackProps {
   document: Document;
   description: string;
   dataStream: DataStreamWriter;
+  model: LanguageModel;
   session: Session;
 }
 
@@ -48,6 +50,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         id: args.id,
         title: args.title,
         dataStream: args.dataStream,
+        model: args.model,
         session: args.session,
       });
 
@@ -68,6 +71,7 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
         document: args.document,
         description: args.description,
         dataStream: args.dataStream,
+        model: args.model,
         session: args.session,
       });
 

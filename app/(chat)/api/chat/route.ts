@@ -6,7 +6,7 @@ import {
 } from "ai";
 
 import { auth } from "@/app/(auth)/auth";
-import { getMyProvider, myProvider } from "@/lib/ai/provider";
+import { getMyProvider } from "@/lib/ai/provider";
 import { systemPrompt } from "@/lib/ai/prompts";
 import {
   deleteChatById,
@@ -26,8 +26,6 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { getWeather } from "@/lib/ai/tools/get-weather";
-import { Model } from "@/lib/ai/models";
-import { console } from "inspector";
 
 export const maxDuration = 60;
 
@@ -45,6 +43,10 @@ export async function POST(request: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const dbProviders = await getProviderByUserId(session.user.id);
+  const myProvider = getMyProvider(dbProviders);
+  const artifactModel = myProvider.languageModel("artifact-model")
+  const titleModel = myProvider.languageModel("title-model")
   const userMessage = getMostRecentUserMessage(messages);
 
   if (!userMessage) {
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
   const chat = await getChatById({ id });
 
   if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage });
+    const title = await generateTitleFromUserMessage({ message: userMessage, model: titleModel });
     await saveChat({ id, userId: session.user.id, title });
   }
 
@@ -62,11 +64,6 @@ export async function POST(request: Request) {
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
 
-  console.log(`selectedChatModel:  ${selectedChatModel}`);
-  const dbProviders = await getProviderByUserId(session.user.id);
-  const myProvider = await getMyProvider(dbProviders);
-  console.log(`myProvider:  ${myProvider}`);
-  // selectedChatModel = "tencent-deepseek:deepseek-v3";
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
@@ -74,24 +71,24 @@ export async function POST(request: Request) {
         system: systemPrompt({ selectedChatModel }),
         messages,
         maxSteps: 5,
-        experimental_activeTools:
-          selectedChatModel === "chat-model-reasoning"
-            ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-              ],
+        experimental_activeTools: selectedChatModel.includes("deepseek-r1")
+          ? []
+          : [
+            "getWeather",
+            "createDocument",
+            "updateDocument",
+            "requestSuggestions",
+          ],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
         tools: {
           getWeather,
-          createDocument: createDocument({ session, dataStream }),
-          updateDocument: updateDocument({ session, dataStream }),
+          createDocument: createDocument({ session, dataStream, model: artifactModel }),
+          updateDocument: updateDocument({ session, dataStream, model: artifactModel }),
           requestSuggestions: requestSuggestions({
             session,
             dataStream,
+            model: artifactModel
           }),
         },
         onFinish: async ({ response, reasoning }) => {
@@ -101,7 +98,6 @@ export async function POST(request: Request) {
                 messages: response.messages,
                 reasoning,
               });
-
               await saveMessages({
                 messages: sanitizedResponseMessages.map((message) => {
                   return {
@@ -130,7 +126,8 @@ export async function POST(request: Request) {
         sendReasoning: true,
       });
     },
-    onError: () => {
+    onError: (err) => {
+      console.error(err)
       return "Oops, an error occured!";
     },
   });

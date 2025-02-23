@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "NODE_OPTIONS='--inspect' next dev --turbo",
     "build": "tsx lib/db/migrate && next build",
     "start": "next start",
     "lint": "next lint && biome lint --write --unsafe",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@ai-sdk/deepseek": "^0.1.10",
     "@ai-sdk/fireworks": "^0.1.8",
-    "@ai-sdk/openai": "1.1.9",
+    "@ai-sdk/openai": "^1.1.13",
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-python": "^6.1.6",
     "@codemirror/state": "^6.5.0",

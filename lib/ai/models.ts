@@ -8,6 +8,7 @@ export interface ChatModel {
 
 export interface Model {
   nickname: string;
+  aliasModelID?: string;
   modelID: string;
   modelProvider: string;
   modelDescription: string;
@@ -18,6 +19,7 @@ export interface Model {
 export const processModelData = (data: any[]): Model[] => {
   return data.map((item) => ({
     nickname: item.id,
+    aliasModelID: item.aliasModelID,
     modelID: item.id,
     modelProvider: item.owned_by,
     modelDescription: `A model provided by ${item.owned_by}`,

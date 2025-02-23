@@ -45,9 +45,7 @@ interface ProviderFormProps {
 
 export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
   const [loadingModels, setLoadingModels] = useState(false);
-  const [models, setModels] = useState<Model[]>(
-    initialData?.models?.map((m) => JSON.parse(String(m))) || [],
-  );
+  const [models, setModels] = useState<Model[]>(initialData?.models || []);
   console.log("initialData: ", initialData);
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -64,7 +62,7 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
     // 获取表单中的baseUrl和apiKey
     const { baseUrl, apiKey } = form.getValues();
     // 拼接API路径并移除可能的双斜杠
-    const apiUrl = `${baseUrl.replace(/\/$/, "")}/v1/models`;
+    const apiUrl = `${baseUrl}/models`;
 
     try {
       const response = await fetch("/api/models", {
@@ -186,7 +184,7 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
           onLoadModels={handleLoadModels}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4 select-none cursor-pointer">
           <Button type="submit">
             {initialData ? "Save Changes" : "Create Provider"}
           </Button>

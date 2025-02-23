@@ -8,6 +8,7 @@ export const imageDocumentHandler = createDocumentHandler<"image">({
     let draftContent = "";
 
     const { image } = await experimental_generateImage({
+      // TODO: adapt image model
       model: myProvider.imageModel("small-model"),
       prompt: title,
       n: 1,

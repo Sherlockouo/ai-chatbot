@@ -1,5 +1,5 @@
 import { generateUUID } from '@/lib/utils';
-import { DataStreamWriter, tool } from 'ai';
+import { DataStreamWriter, LanguageModel, tool } from 'ai';
 import { z } from 'zod';
 import { Session } from 'next-auth';
 import {
@@ -10,9 +10,10 @@ import {
 interface CreateDocumentProps {
   session: Session;
   dataStream: DataStreamWriter;
+  model: LanguageModel;
 }
 
-export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
+export const createDocument = ({ session, dataStream, model }: CreateDocumentProps) =>
   tool({
     description:
       'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
@@ -56,6 +57,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         id,
         title,
         dataStream,
+        model,
         session,
       });
 

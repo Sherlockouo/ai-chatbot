@@ -159,7 +159,7 @@ export function PureMessageActions({
           <TooltipContent>Downvote Response</TooltipContent>
         </Tooltip>
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <div>
               <MarkdownToImage
                 markdown={message.content as string}

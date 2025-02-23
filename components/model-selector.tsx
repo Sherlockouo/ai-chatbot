@@ -13,7 +13,7 @@ import {
 import { ChatModel } from "@/lib/ai/models";
 import { cn, fetcher } from "@/lib/utils";
 
-import { CheckCircleFillIcon, ChevronDownIcon } from "./icons";
+import { CheckCircleFillIcon, ChevronDownIcon, LoaderIcon } from "./icons";
 import { Provider } from "@/lib/db/schema";
 import useSWR from "swr";
 import { Skeleton } from "./ui/skeleton";
@@ -28,7 +28,6 @@ export function ModelSelector({
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  // TODO: chat models 通过 fetch api/providers 接口获取,需要用SWR，并把响应结果转换为 chatModels 数组, 默认模型为第一个
   // 使用SWR获取providers数据
   const { data: providers } = useSWR<Provider[]>("/api/providers", fetcher, {
     fallbackData: [],
@@ -38,8 +37,8 @@ export function ModelSelector({
   const dynamicChatModels = useMemo(() => {
     if (!providers) return [];
     return providers.flatMap((provider: Provider) =>
-      (provider.models || []).map((m) => {
-        const model = JSON.parse(String(m));
+      (provider.models || []).map((model) => {
+        // const model = JSON.parse(String(m));
         return {
           id: `${provider.providerName}:${model.modelID}`,
           name: model.nickname,
@@ -48,6 +47,7 @@ export function ModelSelector({
       }),
     );
   }, [providers]);
+
 
   // 使用第一个模型作为默认值
   const defaultModelId = dynamicChatModels[0]?.id || "";
@@ -72,12 +72,20 @@ export function ModelSelector({
       >
         <Button variant="outline" className="md:px-2 md:h-[34px]">
           {selectedChatModel?.name || (
-            <Skeleton className="size-16 h-4 rounded-xs" />
+            <div className="flex items-center gap-2">
+              <div className="animate-spin">
+                <LoaderIcon />
+              </div>
+              <Skeleton className="size-16 h-6 rounded-md" />
+            </div>
           )}
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent
+        align="start"
+        className="min-w-[300px] max-h-[60svh] overflow-y-scroll no-scrollbar"
+      >
         {dynamicChatModels.map((chatModel) => {
           const { id } = chatModel;
 

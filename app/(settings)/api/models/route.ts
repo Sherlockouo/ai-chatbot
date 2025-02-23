@@ -11,6 +11,7 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    console.log(`Proxying API request to ${apiUrl} with key ${apiKey}`);
 
     const response = await fetch(apiUrl, {
       headers: {

@@ -1,18 +1,19 @@
 import { z } from "zod";
 import { Session } from "next-auth";
-import { DataStreamWriter, streamObject, tool } from "ai";
+import { DataStreamWriter, LanguageModel, streamObject, tool } from "ai";
 import { getDocumentById, saveSuggestions } from "@/lib/db/queries";
 import { Suggestion } from "@/lib/db/schema";
 import { generateUUID } from "@/lib/utils";
-import { myProvider } from "../provider";
 
 interface RequestSuggestionsProps {
   session: Session;
   dataStream: DataStreamWriter;
+  model: LanguageModel;
 }
 
 export const requestSuggestions = ({
   session,
+  model,
   dataStream,
 }: RequestSuggestionsProps) =>
   tool({
@@ -36,7 +37,7 @@ export const requestSuggestions = ({
       > = [];
 
       const { elementStream } = streamObject({
-        model: myProvider.languageModel("artifact-model"),
+        model: model,
         system:
           "You are a help writing assistant. Given a piece of writing, please offer suggestions to improve the piece of writing and describe the change. It is very important for the edits to contain full sentences instead of just words. Max 5 suggestions.",
         prompt: document.content,

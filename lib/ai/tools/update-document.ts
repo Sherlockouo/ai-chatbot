@@ -1,4 +1,4 @@
-import { DataStreamWriter, tool } from 'ai';
+import { DataStreamWriter, LanguageModel, tool } from 'ai';
 import { Session } from 'next-auth';
 import { z } from 'zod';
 import { getDocumentById, saveDocument } from '@/lib/db/queries';
@@ -7,9 +7,10 @@ import { documentHandlersByArtifactKind } from '@/lib/artifacts/server';
 interface UpdateDocumentProps {
   session: Session;
   dataStream: DataStreamWriter;
+  model: LanguageModel;
 }
 
-export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
+export const updateDocument = ({ session, dataStream, model }: UpdateDocumentProps) =>
   tool({
     description: 'Update a document with the given description.',
     parameters: z.object({
@@ -45,6 +46,7 @@ export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
         document,
         description,
         dataStream,
+        model,
         session,
       });
 

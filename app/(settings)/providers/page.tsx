@@ -1,7 +1,7 @@
 // app/(settings)/providers/page.tsx
 "use client";
 
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,15 +17,55 @@ import { ProviderForm } from "./_components/provider-form";
 import { useState } from "react";
 import { type Provider } from "@/lib/db/schema";
 import { type ColumnDef } from "@tanstack/react-table";
-import { fetcher } from "@/lib/utils";
+import { cn, fetcher } from "@/lib/utils";
 import { CopyIcon, EyeCloseIcon, EyeIcon } from "@/components/icons";
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { useCopyToClipboard } from "usehooks-ts";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const animationVariants = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -20 },
+};
+const ModelsCell = ({ models }: { models: any[] }) => {
+  const displayedModels = models?.slice(0, 2) || [];
+  const remainingCount = models?.length - 2 || 0;
+
+  return (
+    <motion.div {...animationVariants} className="flex gap-2 flex-col">
+      {displayedModels.map((model) => (
+        <div key={model.modelID} className="font-mono">
+          {model.modelID}
+        </div>
+      ))}
+      {remainingCount > 0 && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost">+{remainingCount} more</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Available Models</DialogTitle>
+            </DialogHeader>
+            <motion.div
+              {...animationVariants}
+              className="grid grid-cols-2 gap-4 p-4"
+            >
+              {models?.map((model) => (
+                <div
+                  key={model.modelID}
+                  className="font-mono bg-gray-200 rounded-md p-2 break-all"
+                >
+                  {model.modelID}
+                </div>
+              ))}
+            </motion.div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </motion.div>
+  );
 };
 
 const ApiKeyCell = ({ apiKey }: { apiKey: string }) => {
@@ -81,6 +121,7 @@ export default function ProvidersPage() {
   const { mutate } = useSWRConfig();
   const [selectedConfig, setSelectedConfig] = useState<Provider | null>(null);
   const [showDialog, setShowDialog] = useState(false);
+  const { state } = useSidebar();
   const { data: providers, isLoading } = useSWR<Provider[]>(
     "/api/providers",
     fetcher,
@@ -94,6 +135,7 @@ export default function ProvidersPage() {
     toast.promise(deletePromise, {
       loading: "Deleting provider...",
       success: () => {
+        mutate("/api/providers");
         return "deleted successfully";
       },
       error: "Failed to delete chat",
@@ -138,11 +180,7 @@ export default function ProvidersPage() {
     {
       accessorKey: "models",
       header: "Available Models",
-      cell: ({ row }) => (
-        <motion.div {...animationVariants}>
-          {String(row.original.models)}
-        </motion.div>
-      ),
+      cell: ({ row }) => <ModelsCell models={row.original.models || []} />,
     },
     {
       id: "actions",
@@ -174,8 +212,10 @@ export default function ProvidersPage() {
   ];
 
   return (
-    <div className="p-2 space-y-6 w-full mx-2 flex flex-col">
-      <div className="flex justify-between items-center">
+    <div className={cn("p-2 space-y-6 w-full max-w-[svw] flex flex-col overflow-scroll", {
+      "w-[calc(svw-16rem)]": state === 'expanded',
+    })}>
+      <div className="w-full flex justify-between items-center">
         <SidebarToggle />
         <h1 className="text-2xl font-bold">Model Providers</h1>
         <Button
@@ -189,7 +229,7 @@ export default function ProvidersPage() {
       </div>
 
       <motion.div
-        className="mx-auto max-w-screen"
+        className="mx-auto max-w-[calc(svw-var(--sidebar-width))]"
         initial="initial"
         animate="animate"
         transition={{ staggerChildren: 0.05 }}
@@ -202,7 +242,7 @@ export default function ProvidersPage() {
       </motion.div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[500px] md:max-w-[800px]">
+        <DialogContent className="sm:max-w-[500px] md:max-w-[800px] max-h-[60svh] overflow-y-scroll">
           <motion.div
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}

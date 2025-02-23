@@ -12,19 +12,9 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
-import { Model } from "./models";
 import { Provider } from "../db/schema";
 
 export const myProvider = customProvider({
-  languageModels: {
-    "chat-model-reasoning": wrapLanguageModel({
-      model: deepseek("deepseek-r1"),
-      middleware: extractReasoningMiddleware({ tagName: "think" }),
-    }),
-    "chat-model-large": deepseek("deepseek-v3"),
-    "title-model": deepseek("deepseek-v3"),
-    "block-model": deepseek("deepseek-v3"),
-  },
   imageModels: {
     "small-model": openai.image("dall-e-2"),
     "large-model": openai.image("dall-e-3"),
@@ -33,7 +23,7 @@ export const myProvider = customProvider({
 
 export type CustomLanguageModels = Record<string, LanguageModel>;
 
-export async function getMyProvider(dbProviders: Array<Provider>) {
+export function getMyProvider(dbProviders: Array<Provider>) {
   // 初始化所有provider实例
   const providers = dbProviders.map((provider) => {
     switch (provider.providerType) {
@@ -71,8 +61,7 @@ export async function getMyProvider(dbProviders: Array<Provider>) {
   // 构建复合模型列表
   const languageModels: CustomLanguageModels = providers.reduce(
     (acc, provider) => {
-      provider.models?.forEach((m) => {
-        const model = JSON.parse(String(m));
+      provider.models?.forEach((model) => {
         const modelKey = `${provider.name}:${model.modelID}`;
 
         // 特殊处理需要中间件的模型
@@ -82,6 +71,11 @@ export async function getMyProvider(dbProviders: Array<Provider>) {
             middleware: extractReasoningMiddleware({ tagName: "think" }),
           });
         } else {
+          if (model.aliasModelID) {
+            model.aliasModelID.split(",").map((m) => {
+              acc[m] = provider.instance(model.modelID);
+            })
+          }
           acc[modelKey] = provider.instance(model.modelID);
         }
       });
@@ -103,5 +97,5 @@ export async function getMyProvider(dbProviders: Array<Provider>) {
 
 // 类型扩展声明
 declare module "ai" {
-  interface CustomProviderLanguageModels extends CustomLanguageModels {}
+  interface CustomProviderLanguageModels extends CustomLanguageModels { }
 }
