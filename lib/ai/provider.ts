@@ -56,7 +56,6 @@ export function getMyProvider(dbProviders: Array<Provider>) {
         };
     }
   });
-  console.log("providers: ", providers);
 
   // 构建复合模型列表
   const languageModels: CustomLanguageModels = providers.reduce(

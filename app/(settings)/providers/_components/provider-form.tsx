@@ -46,7 +46,6 @@ interface ProviderFormProps {
 export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
   const [loadingModels, setLoadingModels] = useState(false);
   const [models, setModels] = useState<Model[]>(initialData?.models || []);
-  console.log("initialData: ", initialData);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,7 +61,8 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
     // 获取表单中的baseUrl和apiKey
     const { baseUrl, apiKey } = form.getValues();
     // 拼接API路径并移除可能的双斜杠
-    const apiUrl = `${baseUrl}/models`;
+    const u = new URL(baseUrl)
+    const apiUrl = `${u.origin}/v1/models`;
 
     try {
       const response = await fetch("/api/models", {
@@ -78,9 +78,7 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
 
       if (!response.ok) throw new Error("Failed to load models");
       const modelsResp = await response.json();
-      console.log("Loaded models:", modelsResp);
       const models = processModelData(modelsResp.data);
-      console.log("Loaded models:", models);
       setModels(models);
       form.setValue("models", models);
     } catch (error) {
@@ -91,7 +89,6 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("values", values);
     try {
       const url = initialData
         ? `/api/providers?id=${initialData.id}`

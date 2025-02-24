@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useMemo, useOptimistic, useState } from "react";
+import { startTransition, useEffect, useMemo, useOptimistic, useRef, useState } from "react";
 
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { CheckCircleFillIcon, ChevronDownIcon, LoaderIcon } from "./icons";
 import { Provider } from "@/lib/db/schema";
 import useSWR from "swr";
 import { Skeleton } from "./ui/skeleton";
+import { motion, useScroll, useSpring } from "framer-motion";
 
 export function ModelSelector({
   selectedModelId,
@@ -61,6 +62,28 @@ export function ModelSelector({
     [dynamicChatModels, finalSelectedId],
   );
 
+  const { scrollYProgress } = useScroll();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (container) {
+      const checkScroll = () => {
+        setShowScrollHint(container.scrollHeight > container.clientHeight);
+      };
+      checkScroll();
+      container.addEventListener('scroll', checkScroll);
+      return () => container.removeEventListener('scroll', checkScroll);
+    }
+  }, [dynamicChatModels]);
+
+  // 修改动画配置
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 80,
+    damping: 20,
+    restDelta: 0.001
+  });
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
@@ -84,38 +107,51 @@ export function ModelSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="min-w-[300px] max-h-[60svh] overflow-y-scroll no-scrollbar"
+        className="min-w-[300px]"
       >
-        {dynamicChatModels.map((chatModel) => {
-          const { id } = chatModel;
+        <motion.div
+          className="max-h-[40svh] overflow-y-auto relative no-scrollbar"
+          style={{ scaleX }}
+          ref={scrollRef}
+        >
+          {/* 顶部渐变提示 */}
+          <div className="sticky top-0 h-6 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
 
-          return (
-            <DropdownMenuItem
-              key={id}
-              onSelect={() => {
-                setOpen(false);
+          {/* 模型列表内容 */}
+          {dynamicChatModels.map((chatModel) => {
+            const { id } = chatModel;
+            return (
+              <DropdownMenuItem
+                key={id}
+                onSelect={() => {
+                  setOpen(false);
 
-                startTransition(() => {
-                  setOptimisticModelId(id);
-                  saveChatModelAsCookie(id);
-                });
-              }}
-              className="gap-4 group/item flex flex-row justify-between items-center"
-              data-active={id === optimisticModelId}
-            >
-              <div className="flex flex-col gap-1 items-start">
-                <div>{chatModel.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {chatModel.description}
+                  startTransition(() => {
+                    setOptimisticModelId(id);
+                    saveChatModelAsCookie(id);
+                  });
+                }}
+                className="gap-4 group/item flex flex-row justify-between items-center"
+                data-active={id === optimisticModelId}
+              >
+                <div className="flex flex-col gap-1 items-start">
+                  <div>{chatModel.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {chatModel.description}
+                  </div>
                 </div>
-              </div>
 
-              <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                <CheckCircleFillIcon />
-              </div>
-            </DropdownMenuItem>
-          );
-        })}
+                <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
+                  <CheckCircleFillIcon />
+                </div>
+              </DropdownMenuItem>
+            );
+          })}
+
+          {/* 底部渐变提示 */}
+          <div className="sticky bottom-0 h-6 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+        </motion.div>
+
       </DropdownMenuContent>
     </DropdownMenu>
   );

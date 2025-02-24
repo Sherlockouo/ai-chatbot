@@ -80,7 +80,6 @@ export function CodeBlock({
 
   inline = className === undefined || className?.includes("language-md");
 
-  // console.log("CodeBlockProps", node, inline, className, props);
   if (!inline) {
     return (
       <div className="w-full flex flex-col relative">

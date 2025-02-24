@@ -205,7 +205,7 @@ export async function getDocumentsById({ id }: { id: string }) {
       .select()
       .from(document)
       .where(eq(document.id, id))
-      .orderBy(asc(document.createdAt));
+      .orderBy(desc(document.createdAt));
 
     return documents;
   } catch (error) {

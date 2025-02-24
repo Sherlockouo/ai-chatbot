@@ -14,7 +14,6 @@ export function CodeBlock({
   children,
   ...props
 }: CodeBlockProps) {
-  console.log("CodeBlockProps", node, inline, className, children, props);
   if (!inline) {
     return (
       <div className="not-prose flex flex-col">
