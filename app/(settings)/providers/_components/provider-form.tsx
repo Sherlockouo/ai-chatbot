@@ -61,7 +61,7 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
     // 获取表单中的baseUrl和apiKey
     const { baseUrl, apiKey } = form.getValues();
     // 拼接API路径并移除可能的双斜杠
-    const u = new URL(baseUrl)
+    const u = new URL(baseUrl);
     const apiUrl = `${u.origin}/v1/models`;
 
     try {

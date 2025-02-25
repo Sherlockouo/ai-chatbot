@@ -1,6 +1,13 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useOptimistic, useRef, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { Button } from "@/components/ui/button";
@@ -49,7 +56,6 @@ export function ModelSelector({
     );
   }, [providers]);
 
-
   // 使用第一个模型作为默认值
   const defaultModelId = dynamicChatModels[0]?.id || "";
   const finalSelectedId = optimisticModelId || defaultModelId;
@@ -73,8 +79,8 @@ export function ModelSelector({
         setShowScrollHint(container.scrollHeight > container.clientHeight);
       };
       checkScroll();
-      container.addEventListener('scroll', checkScroll);
-      return () => container.removeEventListener('scroll', checkScroll);
+      container.addEventListener("scroll", checkScroll);
+      return () => container.removeEventListener("scroll", checkScroll);
     }
   }, [dynamicChatModels]);
 
@@ -82,7 +88,7 @@ export function ModelSelector({
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 80,
     damping: 20,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -105,10 +111,7 @@ export function ModelSelector({
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="min-w-[300px]"
-      >
+      <DropdownMenuContent align="start" className="min-w-[300px]">
         <motion.div
           className="max-h-[40svh] overflow-y-auto relative no-scrollbar"
           style={{ scaleX }}
@@ -151,7 +154,6 @@ export function ModelSelector({
           {/* 底部渐变提示 */}
           <div className="sticky bottom-0 h-6 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
         </motion.div>
-
       </DropdownMenuContent>
     </DropdownMenu>
   );

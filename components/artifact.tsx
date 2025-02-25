@@ -153,7 +153,6 @@ function PureArtifact({
           }
 
           if (currentDocument?.content !== updatedContent) {
-            console.log("updating database content");
             await fetch(`/api/document?id=${artifact.documentId}`, {
               method: "POST",
               body: JSON.stringify({
@@ -188,7 +187,6 @@ function PureArtifact({
 
   const saveContent = useCallback(
     (updatedContent: string, debounce: boolean) => {
-      console.log("onsave content", updatedContent, debounce);
       if (document && updatedContent !== document.content) {
         setIsContentDirty(true);
 

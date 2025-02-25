@@ -24,6 +24,7 @@ export const myProvider = customProvider({
 export type CustomLanguageModels = Record<string, LanguageModel>;
 
 export function getMyProvider(dbProviders: Array<Provider>) {
+  console.log("providers: ",dbProviders)
   // 初始化所有provider实例
   const providers = dbProviders.map((provider) => {
     switch (provider.providerType) {
