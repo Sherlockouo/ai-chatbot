@@ -20,11 +20,18 @@ import {
 import { ChatModel } from "@/lib/ai/models";
 import { cn, fetcher } from "@/lib/utils";
 
-import { CheckCircleFillIcon, ChevronDownIcon, LoaderIcon } from "./icons";
+import {
+  CheckCircleFillIcon,
+  ChevronDownIcon,
+  LinkIcon,
+  LoaderIcon,
+} from "./icons";
 import { Provider } from "@/lib/db/schema";
 import useSWR from "swr";
 import { Skeleton } from "./ui/skeleton";
 import { motion, useScroll, useSpring } from "framer-motion";
+import Link from "next/link";
+import { Link2Icon } from "lucide-react";
 
 export function ModelSelector({
   selectedModelId,
@@ -37,9 +44,13 @@ export function ModelSelector({
     useOptimistic(selectedModelId);
 
   // 使用SWR获取providers数据
-  const { data: providers } = useSWR<Provider[]>("/api/providers", fetcher, {
-    fallbackData: [],
-  });
+  const { data: providers, isLoading } = useSWR<Provider[]>(
+    "/api/providers",
+    fetcher,
+    {
+      fallbackData: [],
+    }
+  );
 
   // 转换providers数据为chatModels格式
   const dynamicChatModels = useMemo(() => {
@@ -52,7 +63,7 @@ export function ModelSelector({
           name: model.nickname,
           description: model.modelDescription || "",
         };
-      }),
+      })
     );
   }, [providers]);
 
@@ -63,9 +74,9 @@ export function ModelSelector({
   const selectedChatModel = useMemo(
     () =>
       dynamicChatModels.find(
-        (model: ChatModel) => model.id === finalSelectedId,
+        (model: ChatModel) => model.id === finalSelectedId
       ),
-    [dynamicChatModels, finalSelectedId],
+    [dynamicChatModels, finalSelectedId]
   );
 
   const { scrollYProgress } = useScroll();
@@ -96,63 +107,78 @@ export function ModelSelector({
         asChild
         className={cn(
           "w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
-          className,
+          className
         )}
       >
         <Button variant="outline" className="md:px-2 md:h-[34px]">
-          {selectedChatModel?.name || (
+          {isLoading ? (
             <div className="flex items-center gap-2">
               <div className="animate-spin">
                 <LoaderIcon />
               </div>
               <Skeleton className="size-16 h-6 rounded-md" />
             </div>
+          ) : (
+            selectedChatModel?.name || "add model first"
           )}
           <ChevronDownIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent align="start" className="px-auto w-fit ">
         <motion.div
           className="max-h-[40svh] overflow-y-auto relative no-scrollbar"
           style={{ scaleX }}
           ref={scrollRef}
         >
-          {/* 顶部渐变提示 */}
-          <div className="sticky top-0 h-6 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
+          {dynamicChatModels.length ? (
+            <>
+              {/* 顶部渐变提示 */}
+              <div className="sticky top-0 h-6 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
 
-          {/* 模型列表内容 */}
-          {dynamicChatModels.map((chatModel) => {
-            const { id } = chatModel;
-            return (
-              <DropdownMenuItem
-                key={id}
-                onSelect={() => {
-                  setOpen(false);
+              {/* 模型列表内容 */}
+              {dynamicChatModels.length > 0 &&
+                dynamicChatModels.map((chatModel) => {
+                  const { id } = chatModel;
+                  return (
+                    <DropdownMenuItem
+                      key={id}
+                      onSelect={() => {
+                        setOpen(false);
 
-                  startTransition(() => {
-                    setOptimisticModelId(id);
-                    saveChatModelAsCookie(id);
-                  });
-                }}
-                className="gap-4 group/item flex flex-row justify-between items-center"
-                data-active={id === optimisticModelId}
-              >
-                <div className="flex flex-col gap-1 items-start">
-                  <div>{chatModel.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {chatModel.description}
-                  </div>
-                </div>
+                        startTransition(() => {
+                          setOptimisticModelId(id);
+                          saveChatModelAsCookie(id);
+                        });
+                      }}
+                      className="gap-4 group/item flex flex-row justify-between items-center"
+                      data-active={id === optimisticModelId}
+                    >
+                      <div className="flex flex-col gap-1 items-start">
+                        <div>{chatModel.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {chatModel.description}
+                        </div>
+                      </div>
 
-                <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                  <CheckCircleFillIcon />
-                </div>
-              </DropdownMenuItem>
-            );
-          })}
+                      <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
+                        <CheckCircleFillIcon />
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
 
-          {/* 底部渐变提示 */}
-          <div className="sticky bottom-0 h-6 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+              {/* 底部渐变提示 */}
+              <div className="sticky bottom-0 h-6 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+            </>
+          ) : (
+            <div className="underline">
+              <Link href="/providers" legacyBehavior passHref>
+                <Button variant="secondary" className="underline hover:opa">
+                  <Link2Icon /> Add Provider
+                </Button>
+              </Link>
+            </div>
+          )}
         </motion.div>
       </DropdownMenuContent>
     </DropdownMenu>
