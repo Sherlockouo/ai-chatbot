@@ -29,6 +29,8 @@ import { getWeather } from "@/lib/ai/tools/get-weather";
 
 export const maxDuration = 60;
 
+const reasoningModels = ["deepseek-r1","deepseek-reasoner"]
+
 export async function POST(request: Request) {
   const {
     id,
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
   await saveMessages({
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
+  const realModel = selectedChatModel.split(":").pop() ||""
 
   return createDataStreamResponse({
     execute: (dataStream) => {
@@ -71,7 +74,7 @@ export async function POST(request: Request) {
         system: systemPrompt({ selectedChatModel }),
         messages,
         maxSteps: 5,
-        experimental_activeTools: selectedChatModel.includes("deepseek-r1")
+        experimental_activeTools: reasoningModels.includes(realModel)
           ? []
           : [
             "getWeather",
