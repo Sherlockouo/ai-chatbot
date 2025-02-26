@@ -29,7 +29,7 @@ import { getWeather } from "@/lib/ai/tools/get-weather";
 
 export const maxDuration = 60;
 
-const reasoningModels = ["deepseek-r1","deepseek-reasoner"]
+const reasoningModels = ["deepseek-r1", "deepseek-reasoner"];
 
 export async function POST(request: Request) {
   const {
@@ -47,9 +47,15 @@ export async function POST(request: Request) {
 
   const dbProviders = await getProviderByUserId(session.user.id);
   const myProvider = getMyProvider(dbProviders);
-  const artifactModel = myProvider.languageModel("artifact-model")
-  const titleModel = myProvider.languageModel("title-model")
+
+  const userSelectedModel = myProvider.languageModel(selectedChatModel);
+  const artifactModel =
+    myProvider.languageModel("artifact-model") || userSelectedModel;
+  const titleModel =
+    myProvider.languageModel("title-model") || userSelectedModel;
   const userMessage = getMostRecentUserMessage(messages);
+
+  const realModelID = selectedChatModel.split(":").pop() || "";
 
   if (!userMessage) {
     return new Response("No user message found", { status: 400 });
@@ -58,40 +64,50 @@ export async function POST(request: Request) {
   const chat = await getChatById({ id });
 
   if (!chat) {
-    const title = await generateTitleFromUserMessage({ message: userMessage, model: titleModel });
+    const title = await generateTitleFromUserMessage({
+      message: userMessage,
+      model: titleModel,
+    });
     await saveChat({ id, userId: session.user.id, title });
   }
 
   await saveMessages({
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
-  const realModel = selectedChatModel.split(":").pop() ||""
 
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({
-        model: myProvider.languageModel(selectedChatModel),
+        model: userSelectedModel,
         system: systemPrompt({ selectedChatModel }),
         messages,
         maxSteps: 5,
-        experimental_activeTools: reasoningModels.includes(realModel)
+        experimental_activeTools: reasoningModels.includes(realModelID)
           ? []
           : [
-            "getWeather",
-            "createDocument",
-            "updateDocument",
-            "requestSuggestions",
-          ],
+              "getWeather",
+              "createDocument",
+              "updateDocument",
+              "requestSuggestions",
+            ],
         experimental_transform: smoothStream({ chunking: "word" }),
         experimental_generateMessageId: generateUUID,
         tools: {
           getWeather,
-          createDocument: createDocument({ session, dataStream, model: artifactModel }),
-          updateDocument: updateDocument({ session, dataStream, model: artifactModel }),
+          createDocument: createDocument({
+            session,
+            dataStream,
+            model: artifactModel,
+          }),
+          updateDocument: updateDocument({
+            session,
+            dataStream,
+            model: artifactModel,
+          }),
           requestSuggestions: requestSuggestions({
             session,
             dataStream,
-            model: artifactModel
+            model: artifactModel,
           }),
         },
         onFinish: async ({ response, reasoning }) => {
@@ -130,7 +146,7 @@ export async function POST(request: Request) {
       });
     },
     onError: (err) => {
-      console.error(err)
+      console.error(err);
       return "Oops, an error occured!";
     },
   });

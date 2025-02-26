@@ -58,11 +58,8 @@ export function ProviderForm({ initialData, onSuccess }: ProviderFormProps) {
   });
   const handleLoadModels = async () => {
     setLoadingModels(true);
-    // 获取表单中的baseUrl和apiKey
     const { baseUrl, apiKey } = form.getValues();
-    // 拼接API路径并移除可能的双斜杠
-    const u = new URL(baseUrl);
-    const apiUrl = `${u.origin}/v1/models`;
+    const apiUrl = `${baseUrl}/models`;
 
     try {
       const response = await fetch("/api/models", {

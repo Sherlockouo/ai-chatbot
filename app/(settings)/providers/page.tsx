@@ -127,6 +127,7 @@ export default function ProvidersPage() {
     fetcher,
   );
 
+
   const handleDelete = async (deleteId: string) => {
     const deletePromise = fetch(`/api/providers?id=${deleteId}`, {
       method: "DELETE",
